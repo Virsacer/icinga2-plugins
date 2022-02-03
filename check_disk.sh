@@ -60,6 +60,9 @@ PERFORMANCE="|"
 
 while read -r FS; do
 	FS=(${FS})
+	if [ ${FS[1]} == "zfs" ];then
+		[ -x "$(which zfs)" ] || FS[1]="ZFS"
+	fi
 	case ${FS[1]} in
 		Type|devtmpfs|overlay|tmpfs)
 			continue
