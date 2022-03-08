@@ -92,11 +92,11 @@ while read -r FS; do
 		WARNING_PERCENT=${WARNING_LARGE}
 		CRITICAL_PERCENT=${CRITICAL_LARGE}
 	fi
-	if [ ${PERCENT} -ge ${CRITICAL_PERCENT} ];then
+	if [ ${USED} -ge $(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l)) ];then
 		STATUS=2
 		OUTPUT="${OUTPUT} (CRITICAL)"
 	else
-		if [ ${PERCENT} -ge ${WARNING_PERCENT} ];then
+		if [ ${USED} -ge $(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l)) ];then
 			if [ ${STATUS} -eq 0 ];then
 				STATUS=1
 			fi
