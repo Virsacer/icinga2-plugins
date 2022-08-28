@@ -6,7 +6,7 @@ $filename = basename(__FILE__);
 if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
 if (substr(@$argv[0], -strlen($filename)) == $filename) array_shift($argv);
 if (count($argv) < 2) {
-	echo "USAGE: " . $filename . " Username Password [Age] [Task] [CriticalSeverity] [WarningSeverity]\n";
+	echo "USAGE: " . $filename . " Username Password [[Task:Age,]DefaultAge] [Task] [CriticalSeverity] [WarningSeverity]\n";
 	exit(3);
 }
 $cli = "sudo -u daemon /usr/local/bin/gvm-cli --gmp-username " . $argv[0] . " --gmp-password " . $argv[1] . " tls --hostname 127.0.0.1 --port 9390";
@@ -32,6 +32,12 @@ if (isset($argv[3]) && preg_match("/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab]
 		exit(3);
 	}
 }
+$age = array("!" => 0);
+$argv[2] = explode(",", $argv[2] ?? "");
+foreach ($argv[2] as $data) {
+	$data = explode(":", $data);
+	$age[isset($data[1]) ? $data[0] : "!"] = $data[1] ?? ($data[0] != "" ? $data[0] : 0);
+}
 $out = "";
 $return = 0;
 $result = array("high" => 0, "medium" => 0, "low" => 0, "log" => 0);
@@ -55,10 +61,11 @@ foreach ($tasks as $name => $id) {
 		if ($return == 0) $return = 3;
 		continue;
 	}
+	$argv[2] = $age[$name] ?? $age['!'];
 	if ($xml->severity < 0) {
 		$out .= " - Report of '" . $name . "' contains errors";
 		$return = 2;
-	} elseif (isset($argv[2]) && $argv[2] && strtotime($xml->timestamp) + 86400 * $argv[2] < time()) {
+	} elseif ($argv[2] && strtotime($xml->timestamp) + 86400 * $argv[2] < time()) {
 		$out .= " - Report of '" . $name . "' is older than " . $argv[2] . " days";
 		$return = 2;
 	}
