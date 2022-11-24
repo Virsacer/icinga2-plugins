@@ -84,32 +84,40 @@ while read -r FS; do
 	if [ "${DISK}" == "-l" ];then
 		OUTPUT="${OUTPUT}\n"
 	else
-		OUTPUT="${OUTPUT} -"
+		OUTPUT=" - "
 	fi
 	PERCENT=$((100-${AVAI}*100/${SIZE}))
-	OUTPUT="${OUTPUT} ${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
 	if [ ${SIZE} -ge 1099511627776 ];then
 		WARNING_PERCENT=${WARNING_LARGE}
 		CRITICAL_PERCENT=${CRITICAL_LARGE}
 	fi
 	if [ ${USED} -ge $(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l)) ];then
 		STATUS=2
-		OUTPUT="${OUTPUT} (CRITICAL)"
+		if [ "${DISK}" == "-l" ];then
+			OUTPUT="${OUTPUT}[CRITICAL] "
+		fi
 	else
 		if [ ${USED} -ge $(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l)) ];then
 			if [ ${STATUS} -eq 0 ];then
 				STATUS=1
 			fi
-			OUTPUT="${OUTPUT} (WARNING)"
+			if [ "${DISK}" == "-l" ];then
+				OUTPUT="${OUTPUT}[WARNING] "
+			fi
+		else
+			if [ "${DISK}" == "-l" ];then
+				OUTPUT="${OUTPUT}[OK] "
+			fi
 		fi
 	fi
+	OUTPUT="${OUTPUT}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
 	PERFORMANCE="${PERFORMANCE} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE}"
 done <<< "$DATA"
 
 case ${STATUS} in
-	2) echo "CRITICAL${OUTPUT}";;
-	1) echo "WARNING${OUTPUT}";;
-	0) echo "OK${OUTPUT}";;
+	2) echo -en "CRITICAL${OUTPUT}";;
+	1) echo -en "WARNING${OUTPUT}";;
+	0) echo -en "OK${OUTPUT}";;
 esac
 
 echo ${PERFORMANCE} | sed -e 's/| /|/'

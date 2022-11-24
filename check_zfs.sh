@@ -34,35 +34,42 @@ OUTPUT=""
 PERFORMANCE="|"
 
 while read -r POOL; do
+	STATE=""
 	POOL=(${POOL})
-	OUTPUT="${OUTPUT}\n${POOL[0]} ${POOL[1]} ${POOL[2]}%"
+	OUTPUT="${OUTPUT}\n"
 	if [ "${POOL[1]}" != "ONLINE" -o ${POOL[2]} -ge ${CRITICAL_PERCENT} ];then
-		STATE="`zpool status ${POOL[0]} | sed -e '/^$/d' -e '/action:/d' -e '/config:/d' -e '/pool:/d' -e '/see:/d' -e '/state:/d' -e '/status:/,/\.$/d' -e 's/ \+was \/dev.*//'`\n"
+		if [ "${POOL[1]}" != "ONLINE" ];then
+			STATE="\n`zpool status ${POOL[0]} | sed -e '/^$/d' -e '/action:/d' -e '/config:/d' -e '/pool:/d' -e '/see:/d' -e '/state:/d' -e '/status:/,/\.$/d' -e 's/ \+was \/dev.*//'`\n"
+		fi
 		echo ${STATE} | grep "resilver in progress" > /dev/null
-		if [ $? -ne 0 ];then
+		if [ $? -ne 0 -o ${POOL[2]} -ge ${CRITICAL_PERCENT} ];then
 			STATUS=2
-			OUTPUT="${OUTPUT} (CRITICAL)\n${STATE}"
+			OUTPUT="${OUTPUT}[CRITICAL] "
 		else
-			STATUS=1
-			OUTPUT="${OUTPUT} (WARNING)\n${STATE}"
+			if [ ${STATUS} -eq 0 ];then
+				STATUS=1
+			fi
+			OUTPUT="${OUTPUT}[WARNING] "
 		fi
 	else
 		if [ ${POOL[2]} -ge ${WARNING_PERCENT} ];then
 			if [ ${STATUS} -eq 0 ];then
 				STATUS=1
 			fi
-			OUTPUT="${OUTPUT} (WARNING)"
+			OUTPUT="${OUTPUT}[WARNING] "
+		else
+			OUTPUT="${OUTPUT}[OK] "
 		fi
 	fi
+	OUTPUT="${OUTPUT}${POOL[0]} ${POOL[1]} ${POOL[2]}%${STATE}"
 	PERFORMANCE="${PERFORMANCE} '${POOL[0]}'=${POOL[3]}B;$((${POOL[4]}*${WARNING_PERCENT}/100));$((${POOL[4]}*${CRITICAL_PERCENT}/100));0;${POOL[4]}"
 done <<< "$DATA"
 
 case ${STATUS} in
-	2) echo "CRITICAL";;
-	1) echo "WARNING";;
-	0) echo "OK";;
+	2) echo -en "CRITICAL${OUTPUT}";;
+	1) echo -en "WARNING${OUTPUT}";;
+	0) echo -en "OK${OUTPUT}";;
 esac
 
-echo -e "${OUTPUT}" | sed -z '$ s/\n\+$//'
 echo ${PERFORMANCE} | sed -e 's/| /|/'
 exit ${STATUS}
