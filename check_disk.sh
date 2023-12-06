@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#command[check_disk]=sudo /usr/lib/nagios/plugins/check_disk.sh -w $ARG1$ -c $ARG2$ -d $ARG3$
-
 #ZFS confusion -> see https://oshogbo.vexillium.org/blog/65/
 
 WARNING_PERCENT="85"
@@ -11,7 +9,7 @@ CRITICAL_LARGE="98"
 DISK="-l"
 IGNORE=""
 
-while getopts "w:c:d:r:i:" OPT; do
+while getopts "w:c:d:i:" OPT; do
 	case "${OPT}" in
 		w)
 			WARNING_PERCENT=${OPTARG}
@@ -27,11 +25,7 @@ while getopts "w:c:d:r:i:" OPT; do
 		i)
 			IGNORE=${OPTARG}
 			;;
-		:)
-			echo "Error: -${OPTARG} requires an argument."
-			exit 3
-			;;
-		\?)
+		*)
 			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ] [ -d DISK ] [ -i IGNORE ]" 1>&2
 			exit 3
 			;;
@@ -112,6 +106,7 @@ while read -r FS; do
 	fi
 	OUTPUT="${OUTPUT}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
 	PERFORMANCE="${PERFORMANCE} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE}"
+#	PERFORMANCE="${PERFORMANCE} disk_usage=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE} disk_usage_pct=${PERCENT}%;${WARNING_PERCENT};${CRITICAL_PERCENT} disk_usage_alloc=${SIZE}B"
 done <<< "$DATA"
 
 case ${STATUS} in

@@ -10,7 +10,7 @@ if (count($argv) < 4) {
 }
 
 curl_setopt_array($curl = curl_init(), array(
-	CURLOPT_URL => "https://" . $argv[0] . "/data.lua",
+	CURLOPT_URL => "http://" . $argv[0] . "/data.lua",
 	CURLOPT_CONNECTTIMEOUT => 30,
 	CURLOPT_FOLLOWLOCATION => TRUE,
 	CURLOPT_RETURNTRANSFER => TRUE,
@@ -18,7 +18,7 @@ curl_setopt_array($curl = curl_init(), array(
 ));
 
 $session = array();
-$sessions = "/tmp/" . $filename . ".sessions";
+$sessions = __DIR__ . "/cache/" . $filename . "-sessions";
 if (file_exists($sessions)) {
 	$session = json_decode(file_get_contents($sessions), TRUE);
 	if (isset($session[$argv[0]])) {
@@ -47,12 +47,12 @@ $data = json_decode($data, TRUE);
 if (isset($argv[5])) {
 	$warn = min(intval($argv[4]), intval($argv[5]));
 	$crit = max(intval($argv[4]), intval($argv[5]));
-} elseif ($argv[3] == "TEMP") {
-	$warn = 90;
-	$crit = 100;
 } elseif ($argv[3] == "RAM") {
 	$warn = 85;
 	$crit = 90;
+} elseif ($argv[3] == "TEMP") {
+	$warn = 90;
+	$crit = 100;
 } else {
 	$warn = 80;
 	$crit = 90;
@@ -65,7 +65,7 @@ switch ($argv[3]) {
 			exit(3);
 		}
 		$data = end($data['data']['cpuutil']['series'][0]);
-		$out = $data . "%|'CPU'=" . $data . "%;" . $warn . ";" . $crit;
+		$out = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit;
 		break;
 	case "RAM":
 		if (!isset($data['data']['ramusage']['series'][2])) {
@@ -73,7 +73,7 @@ switch ($argv[3]) {
 			exit(3);
 		}
 		$data = 100 - end($data['data']['ramusage']['series'][2]);
-		$out = $data . "%|'RAM'=" . $data . "%;" . $warn . ";" . $crit;
+		$out = $data . "%|used=" . $data . "%;" . $warn . ";" . $crit;
 		break;
 	case "TEMP":
 		if (!isset($data['data']['cputemp']['series'][0])) {
@@ -81,7 +81,7 @@ switch ($argv[3]) {
 			exit(3);
 		}
 		$data = end($data['data']['cputemp']['series'][0]);
-		$out = $data . "°C|'Temp'=" . $data . ";" . $warn . ";" . $crit;
+		$out = $data . "°C|Temp=" . $data . ";" . $warn . ";" . $crit;
 		break;
 	default:
 		echo "UKNOWN - Mode parameter needs to be 'CPU', 'RAM' or 'TEMP'";

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#command[check_zfs]=sudo /usr/lib/nagios/plugins/check_zfs.sh -w $ARG1$ -c $ARG2$
-
 WARNING_PERCENT="70"
 CRITICAL_PERCENT="85"
 
@@ -13,11 +11,7 @@ while getopts "w:c:" OPT; do
 		c)
 			CRITICAL_PERCENT=${OPTARG}
 			;;
-		:)
-			echo "Error: -${OPTARG} requires an argument."
-			exit 3
-			;;
-		\?)
+		*)
 			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ]" 1>&2
 			exit 3
 			;;

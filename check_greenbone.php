@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
-#https://docs.greenbone.net/API/GMP/gmp-9.0.html
+
+#Greenbone API -> see https://docs.greenbone.net/API/GMP/gmp-9.0.html
 
 $filename = basename(__FILE__);
 if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
@@ -9,7 +10,7 @@ if (count($argv) < 2) {
 	echo "USAGE: " . $filename . " Username Password [[Task:Age,]DefaultAge] [Task] [CriticalSeverity] [WarningSeverity]\n";
 	exit(3);
 }
-$cli = "sudo -u daemon /usr/local/bin/gvm-cli --gmp-username " . $argv[0] . " --gmp-password " . $argv[1] . " tls --hostname 127.0.0.1 --port 9390";
+$cli = "docker exec greenbone-gvm-1 sudo -u daemon /gvm/bin/gvm-cli --gmp-username " . $argv[0] . " --gmp-password " . $argv[1] . " tls --hostname 127.0.0.1 --port 9390";
 if (isset($argv[3]) && preg_match("/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/", $argv[3])) {
 	$tasks = array($argv[3] => $argv[3]);
 } else {
