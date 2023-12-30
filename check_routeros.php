@@ -5,7 +5,7 @@ $filename = basename(__FILE__);
 if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
 if (substr(@$argv[0], -strlen($filename)) == $filename) array_shift($argv);
 if (count($argv) < 4) {
-	echo "USAGE: " . $filename . " RouterOS Username Password (CPU|HDD|NTP|RAM|TEMP) [Warning Critical]\n";
+	echo "USAGE: " . $filename . " RouterOS[:Port] Username Password (CPU|HDD|NTP|RAM|TEMP) [Warning Critical]\n";
 	exit(3);
 }
 
@@ -26,7 +26,9 @@ if (isset($argv[5])) {
 	$crit = 90;
 }
 
-$ssh = ssh2_connect($argv[0]);
+preg_match("/^([^:]+)(:([0-9]+))?$/", $argv[0], $data);
+if (!$data) preg_match("/^\[([^\]]+)\](:([0-9]+))$/", $argv[0], $data);
+$ssh = ssh2_connect($data[1] ?? $argv[0], $data[3] ?? 22);
 if (!$ssh) {
 	echo "UNKNOWN - Connection failed";
 	exit(3);
