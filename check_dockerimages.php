@@ -48,7 +48,7 @@ foreach ($containers as $container) {
 		continue;
 	}
 
-	$image = shell_exec("docker inspect '" . $container[1] . "'|grep '\"Image\": \"sha256:'");
+	$image = shell_exec("docker inspect '" . $container[1] . "'|grep '\"Id\": \"sha256:'");
 	$image = preg_replace("/.*sha256:([0-9a-f]+).*/s", "$1", $image);
 
 	if (strpos($manifest, $image) === FALSE) {
