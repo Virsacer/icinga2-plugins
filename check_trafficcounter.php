@@ -43,8 +43,8 @@ $data['last_in'] = $snmp[$argv[2]];
 $data['last_out'] = $snmp[$argv[3]];
 file_put_contents($cache, json_encode($data));
 
-echo "IN: " . number_format($data['count_in'] / 1024 / 1024 / 1024, 3) . "GB ";
-echo "OUT: " . number_format($data['count_out'] / 1024 / 1024 / 1024, 3) . "GB ";
-echo "TOTAL: " . number_format(($data['count_in'] + $data['count_out']) / 1024 / 1024 / 1024, 3) . "GB|";
+echo "IN: " . number_format($data['count_in'] / 1000 / 1000 / 1000, 2) . "GB ";
+echo "OUT: " . number_format($data['count_out'] / 1000 / 1000 / 1000, 2) . "GB ";
+echo "TOTAL: " . number_format(($data['count_in'] + $data['count_out']) / 1000 / 1000 / 1000, 2) . "GB|";
 echo "in=" . $data['count_in'] . "B out=" . $data['count_out'] . "B total=" . ($data['count_in'] + $data['count_out']) . "B ";
 exit(0);
