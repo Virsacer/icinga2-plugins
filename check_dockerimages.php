@@ -32,7 +32,6 @@ if (array_key_exists("f", $options)) {
 
 foreach ($containers as $container) {
 	$container = explode(" ", $container);
-	if (!isset($container[1])) $container[1] = $container[0];
 
 	$cache = __DIR__ . "/cache/" . $filename . "-" . str_replace("/", "-", $container[0]);
 	if (!file_exists($cache) || $time - filemtime($cache) > 3 * 3600) {
@@ -44,12 +43,13 @@ foreach ($containers as $container) {
 
 	if (!$manifest || strpos($manifest, "error") !== FALSE) {
 		if ($status == 0) $status = 1;
-		$out["2-" . $container[0]] = "[WARNING] " . $container[1] . ": No manifest for '" . $container[0] . "'";
+		$out["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No manifest for '" . $container[0] . "'";
 		continue;
 	}
 
-	$image = shell_exec("docker inspect '" . $container[1] . "'|grep '\"Id\": \"sha256:'");
+	$image = shell_exec("docker inspect '" . ($container[1] ?? $container[0]) . "'|grep '\"" . (isset($container[1]) ? "Image" : "Id") . "\": \"sha256:'");
 	$image = preg_replace("/.*sha256:([0-9a-f]+).*/s", "$1", $image);
+	if (!isset($container[1])) $container[1] = $container[0];
 
 	if (strpos($manifest, $image) === FALSE) {
 		$status = 2;
