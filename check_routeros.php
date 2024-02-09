@@ -19,8 +19,8 @@ if (isset($argv[5])) {
 	$warn = 0.5;
 	$crit = 1;
 } elseif ($argv[3] == "TEMP") {
-	$warn = 90;
-	$crit = 100;
+	$warn = 70;
+	$crit = 80;
 } else {
 	$warn = 80;
 	$crit = 90;
