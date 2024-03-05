@@ -106,7 +106,9 @@ while read -r FS; do
 	fi
 	OUTPUT="${OUTPUT}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
 	PERFORMANCE="${PERFORMANCE} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE}"
-#	PERFORMANCE="${PERFORMANCE} disk_usage=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE} disk_usage_pct=${PERCENT}%;${WARNING_PERCENT};${CRITICAL_PERCENT} disk_usage_alloc=${SIZE}B"
+	if [ "${DISK}" != "-l" ];then
+		PERFORMANCE="${PERFORMANCE} percent=${PERCENT}%;${WARNING_PERCENT};${CRITICAL_PERCENT} allocation=${SIZE}B"
+	fi
 done <<< "$DATA"
 
 case ${STATUS} in
