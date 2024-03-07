@@ -28,6 +28,11 @@ $snmp[$argv[2]] = preg_replace("/.*: /", "", $snmp[$argv[2]]);
 $snmp[$argv[3]] = preg_replace("/.*: /", "", $snmp[$argv[3]]);
 
 if (date("Ym", $data['time']) != date("Ym", $time)) {
+	$stats = "Last values before reset: " . date("Y-m-d H:i:s", $data['time']) . "\t"
+		. "IN: " . number_format($data['count_in'], 0) . " Byte\t"
+		. "OUT: " . number_format($data['count_out'], 0) . " Byte\t"
+		. "TOTAL: " . number_format($data['count_in'] + $data['count_out'], 0) . " Byte\n";
+	file_put_contents($cache . ".log", $stats, FILE_APPEND);
 	$data['count_in'] = 0;
 	$data['count_out'] = 0;
 } else {
