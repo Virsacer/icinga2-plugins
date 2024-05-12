@@ -57,6 +57,16 @@ if (isset($display['NumberErrsVisible'])) {
 	$out .= trim($display['CurrentDisplay']);
 }
 
+$data .= trim(shell_exec($cli . "getsysinfo -d -c -w -t"));
+if (strpos($data, "Unable to connect") !== FALSE) {
+	echo "UNKNOWN: Connection lost";
+	exit(3);
+}
+
+$data = preg_replace("/RAC Date\/Time[^\n]*\s*/", "", $data);
+$data = preg_replace("/ " . $servicetag . "/", " <a href='https://www.dell.com/support/home/product-support/servicetag/" . $servicetag . "/overview'>" . $servicetag . "</a>", $data);
+$out .= str_replace("\n", "<br/>", $data);
+
 preg_match("/System Model.*?PowerEdge ([^\n]*)\n/", $data, $model);
 $model = $model[1];
 $images = array(
@@ -75,18 +85,8 @@ $images = array(
 );
 if (array_key_exists($model, $images)) {
 	if (file_exists("/usr/share/icingaweb2/public/img/PowerEdge/" . $model . ".png")) $images[$model] = "img/PowerEdge/" . $model . ".png";
-	$data = preg_replace("/(System Model\s*= PowerEdge " . $model . ")/", "<div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>$1", $data);
+	$out .= "<br/><br/><div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>";
 }
-
-$data .= trim(shell_exec($cli . "getsysinfo -d -c -w -t"));
-if (strpos($data, "Unable to connect") !== FALSE) {
-	echo "UNKNOWN: Connection lost";
-	exit(3);
-}
-
-$data = preg_replace("/RAC Date\/Time[^\n]*\s*/", "", $data);
-$data = preg_replace("/ " . $servicetag . "/", " <a href='https://www.dell.com/support/home/product-support/servicetag/" . $servicetag . "/overview'>" . $servicetag . "</a>", $data);
-$out .= str_replace("\n", "<br/>", $data);
 
 if ($status == 2) {
 	echo "CRITICAL: " . $out;
