@@ -40,7 +40,7 @@ if (!ssh2_auth_password($ssh, $argv[1], $argv[2])) {
 
 switch ($argv[3]) {
 	case "CPU":
-		$stream = ssh2_exec($ssh, "/system/resource;:put [get cpu-load]");
+		$stream = ssh2_exec($ssh, ":put [/system/resource/get cpu-load]");
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
 		if (!is_numeric($data)) {
@@ -50,12 +50,12 @@ switch ($argv[3]) {
 		$out = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit;
 		break;
 	case "HDD":
-		$stream = ssh2_exec($ssh, "/system/resource;:put [get free-hdd-space];:put [get total-hdd-space]");
 	case "RAM":
-		if ($argv[3] == "RAM") $stream = ssh2_exec($ssh, "/system/resource;:put [get free-memory];:put [get total-memory]");
+		if ($argv[3] == "HDD") $stream = ssh2_exec($ssh, ":put ([/system/resource/get free-hdd-space] . \"+\" . [/system/resource/get total-hdd-space])");
+		if ($argv[3] == "RAM") $stream = ssh2_exec($ssh, ":put ([/system/resource/get free-memory] . \"+\" . [/system/resource/get total-memory])");
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
-		$data = explode("\n", $data);
+		$data = explode("+", $data);
 		if (count($data) != 2) {
 			echo "UNKNOWN - No data";
 			exit(3);
@@ -74,7 +74,7 @@ switch ($argv[3]) {
 		$data = $data['percent'];
 		break;
 	case "NTP":
-		$stream = ssh2_exec($ssh, "/system/ntp/client;:put [get system-offset]");
+		$stream = ssh2_exec($ssh, ":put [/system/ntp/client/get system-offset]");
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
 		if (!is_numeric($data)) {
