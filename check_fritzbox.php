@@ -47,9 +47,6 @@ $data = json_decode($data, TRUE);
 if (isset($argv[5])) {
 	$warn = min(intval($argv[4]), intval($argv[5]));
 	$crit = max(intval($argv[4]), intval($argv[5]));
-} elseif ($argv[3] == "TEMP") {
-	$warn = 70;
-	$crit = 80;
 } else {
 	$warn = 80;
 	$crit = 90;
