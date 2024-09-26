@@ -17,7 +17,7 @@ $data = trim(shell_exec($cli . "get System.LCD 2>&1"));
 if (strpos($data, "Unable to connect") !== FALSE) {
 	echo $data;
 	exit(2);
-} elseif (strpos($data, "Login failed") !== FALSE) {
+} elseif (strpos($data, "ERROR") !== FALSE || strpos($data, "Login failed") !== FALSE) {
 	echo $data;
 	exit(3);
 }
