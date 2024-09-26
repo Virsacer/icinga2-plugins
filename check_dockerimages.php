@@ -41,7 +41,7 @@ foreach ($containers as $container) {
 		$manifest = file_get_contents($cache);
 	}
 
-	if (!$manifest || strpos($manifest, "error") !== FALSE) {
+	if (!$manifest || strpos($manifest, "error") !== FALSE || strpos($manifest, "toomanyrequests") !== FALSE) {
 		if ($status == 0) $status = 1;
 		$out["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No manifest for '" . $container[0] . "'";
 		continue;
