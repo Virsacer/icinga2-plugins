@@ -34,17 +34,17 @@ if [ "${SNMP}" != "" ];then
 
 	STATUS=`echo "${DATA}" | grep 3.6.1.2.1.33.1.4.1.0 | sed -e 's/^.*INTEGER: //'`
 	BATTERY=`echo "${DATA}" | grep 3.6.1.2.1.33.1.2.4.0 | sed -e 's/^.*INTEGER: //'`
-	TIMELEFT=`echo "${DATA}" | grep 3.6.1.2.1.33.1.2.3.0 | sed -e 's/^.*INTEGER: //'`
+	MINUTES=`echo "${DATA}" | grep 3.6.1.2.1.33.1.2.3.0 | sed -e 's/^.*INTEGER: //'`
 
 	STATES=(0 "Other" "None" "Normal" "Bypass" "Battery" "Booster" "Reducer")
 	STATUS=${STATES[${STATUS}]}
 
-	if [ ${TIMELEFT} -ge 60 ];then
-		((HOUR=${TIMELEFT} / 60))
-		((MIN=${TIMELEFT} - ${HOUR} * 60))
+	if [ ${MINUTES} -ge 60 ];then
+		((HOUR=${MINUTES} / 60))
+		((MIN=${MINUTES} - ${HOUR} * 60))
 		TIMELEFT=${HOUR}h${MIN}m
 	else
-		TIMELEFT=${TIMELEFT}m
+		TIMELEFT=${MINUTES}m
 	fi
 else
 	DATA=`curl -s -k https://${HOST}:8888/0/json`
@@ -56,9 +56,17 @@ else
 	STATUS=`echo "${DATA}" | jq -r '.status'`
 	BATTERY=`echo "${DATA}" | jq -r '.batCapacity' | sed 's/%//'`
 	TIMELEFT=`echo "${DATA}" | jq -r '.batTimeRemain'`
+
+	MINUTES=0
+	if [[ $TIMELEFT =~ ([0-9]+)h ]]; then
+		((MINUTES=${BASH_REMATCH[1]} * 60))
+	fi
+	if [[ $TIMELEFT =~ ([0-9]+)m ]]; then
+		((MINUTES=${MINUTES} + ${BASH_REMATCH[1]}))
+	fi
 fi
 
-OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT}"
+OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT} Time=${MINUTES}m"
 
 if [ "${STATUS}" != "Normal" -o ${BATTERY} -lt ${CRITICAL_PERCENT} ];then
 	if [ "${STATUS}" == "CAL" ];then

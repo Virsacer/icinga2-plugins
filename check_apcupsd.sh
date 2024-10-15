@@ -27,7 +27,7 @@ STATUS=`echo "${DATA}" | grep STATUS | sed 's/.*:  *\([A-Z][ A-Z]*[A-Z]\).*/\1/'
 BATTERY=`echo "${DATA}" | grep BCHARGE | sed 's/.*:  *\([0-9][0-9]*\).*/\1/'`
 TIMELEFT=`echo "${DATA}" | grep TIMELEFT | sed 's/.*:  *\([0-9][0-9.]*\).*/\1/'`
 
-OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}m|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT}"
+OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}m|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT} Time=${TIMELEFT}m"
 
 if [ "${STATUS}" != "ONLINE" -o ${BATTERY} -lt ${CRITICAL_PERCENT} ];then
 	if [ "${STATUS}" == "CAL" ];then
