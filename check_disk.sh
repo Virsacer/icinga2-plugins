@@ -2,22 +2,22 @@
 
 #ZFS confusion -> see https://oshogbo.vexillium.org/blog/65/
 
-WARNING_PERCENT="85"
-CRITICAL_PERCENT="90"
-WARNING_LARGE="95"
-CRITICAL_LARGE="98"
+WARN="85"
+CRIT="90"
+WARN_LARGE="95"
+CRIT_LARGE="98"
 DISK="-l"
 IGNORE=""
 
 while getopts "w:c:d:i:" OPT; do
 	case "${OPT}" in
 		w)
-			WARNING_PERCENT=${OPTARG}
-			WARNING_LARGE=${OPTARG}
+			WARN=${OPTARG}
+			WARN_LARGE=${OPTARG}
 			;;
 		c)
-			CRITICAL_PERCENT=${OPTARG}
-			CRITICAL_LARGE=${OPTARG}
+			CRIT=${OPTARG}
+			CRIT_LARGE=${OPTARG}
 			;;
 		d)
 			DISK=${OPTARG}
@@ -26,7 +26,7 @@ while getopts "w:c:d:i:" OPT; do
 			IGNORE=${OPTARG}
 			;;
 		*)
-			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ] [ -d DISK ] [ -i IGNORE ]" 1>&2
+			echo "USAGE: $0 [ -w Warning ] [ -c Critical ] [ -d Disk ] [ -i Ignore ]" 1>&2
 			exit 3
 			;;
 	esac
@@ -40,7 +40,7 @@ fi
 if [ "${DISK}" != "-l" ];then
 	COUNT=`echo "${DATA}" | egrep "${DISK}" | wc -l`
 	if [ "${COUNT}" -eq 0 ];then
-		echo "CRITICAL - DISK '${DISK}' not present"
+		echo "CRITICAL: DISK '${DISK}' not present"
 		exit 2
 	fi
 fi
@@ -48,9 +48,9 @@ if [ ! -z "${IGNORE}" ];then
 	DATA=`echo "${DATA}" | egrep -v "${IGNORE}"`
 fi
 
-STATUS=0
-OUTPUT=""
-PERFORMANCE="|"
+EXIT=0
+ECHO=""
+PERF="|"
 
 while read -r FS; do
 	FS=(${FS})
@@ -75,47 +75,43 @@ while read -r FS; do
 			AVAI=$((${FS[4]}*1024))
 			;;
 	esac
-	if [ "${DISK}" == "-l" ];then
-		OUTPUT="${OUTPUT}\n"
-	else
-		OUTPUT=" - "
-	fi
 	PERCENT=$((100-${AVAI}*100/${SIZE}))
 	if [ ${SIZE} -ge 1099511627776 ];then
-		WARNING_PERCENT=${WARNING_LARGE}
-		CRITICAL_PERCENT=${CRITICAL_LARGE}
+		WARN=${WARN_LARGE}
+		CRIT=${CRIT_LARGE}
 	fi
-	if [ ${USED} -ge $(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l)) ];then
-		STATUS=2
+	if [ ${USED} -ge $(((${AVAI}+${USED})*${CRIT}/100 | bc -l)) ];then
 		if [ "${DISK}" == "-l" ];then
-			OUTPUT="${OUTPUT}[CRITICAL] "
+			ECHO="${ECHO}\n[CRITICAL] "
 		fi
+		EXIT=2
 	else
-		if [ ${USED} -ge $(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l)) ];then
-			if [ ${STATUS} -eq 0 ];then
-				STATUS=1
-			fi
+		if [ ${USED} -ge $(((${AVAI}+${USED})*${WARN}/100 | bc -l)) ];then
 			if [ "${DISK}" == "-l" ];then
-				OUTPUT="${OUTPUT}[WARNING] "
+				ECHO="${ECHO}\n[WARNING] "
+			fi
+			if [ ${EXIT} -eq 0 ];then
+				EXIT=1
 			fi
 		else
 			if [ "${DISK}" == "-l" ];then
-				OUTPUT="${OUTPUT}[OK] "
+				ECHO="${ECHO}\n[OK] "
 			fi
 		fi
 	fi
-	OUTPUT="${OUTPUT}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
-	PERFORMANCE="${PERFORMANCE} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARNING_PERCENT}/100 | bc -l));$(((${AVAI}+${USED})*${CRITICAL_PERCENT}/100 | bc -l));0;${SIZE}"
+	ECHO="${ECHO}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
+	PERF="${PERF} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARN}/100 | bc -l));$(((${AVAI}+${USED})*${CRIT}/100 | bc -l));0;${SIZE}"
 	if [ "${DISK}" != "-l" ];then
-		PERFORMANCE="${PERFORMANCE} percent=${PERCENT}%;${WARNING_PERCENT};${CRITICAL_PERCENT} allocation=${SIZE}B"
+		ECHO=" ${ECHO}"
+		PERF="${PERF} percent=${PERCENT}%;${WARN};${CRIT} allocation=${SIZE}B"
 	fi
 done <<< "$DATA"
 
-case ${STATUS} in
-	2) echo -en "CRITICAL${OUTPUT}";;
-	1) echo -en "WARNING${OUTPUT}";;
-	0) echo -en "OK${OUTPUT}";;
+case ${EXIT} in
+	2) echo -en "CRITICAL:${ECHO}";;
+	1) echo -en "WARNING:${ECHO}";;
+	0) echo -en "OK:${ECHO}";;
 esac
 
-echo ${PERFORMANCE} | sed -e 's/| /|/'
-exit ${STATUS}
+echo ${PERF} | sed -e 's/| /|/'
+exit ${EXIT}

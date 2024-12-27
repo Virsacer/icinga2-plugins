@@ -9,16 +9,16 @@ if (count($argv) != 3) {
 	exit(3);
 }
 
-$out = "";
-$status = 0;
+$exit = 0;
+$echo = "";
 $cli = "/opt/dell/srvadmin/bin/idracadm7 -r " . $argv[0] . " -u " . $argv[1] . " -p " . $argv[2] . " --nocertwarn ";
 
 $data = trim(shell_exec($cli . "get System.LCD 2>&1"));
 if (strpos($data, "Unable to connect") !== FALSE) {
-	echo $data;
+	echo rtrim($data, "\r\n") . "\n";
 	exit(2);
 } elseif (strpos($data, "ERROR") !== FALSE || strpos($data, "Login failed") !== FALSE) {
-	echo $data;
+	echo rtrim($data, "\r\n") . "\n";
 	exit(3);
 }
 
@@ -27,7 +27,7 @@ $display = array_combine($display[1], $display[2]);
 
 $data = trim(shell_exec($cli . "getsysinfo -s"));
 if (strpos($data, "Unable to connect") !== FALSE) {
-	echo "UNKNOWN: Connection lost";
+	echo "UNKNOWN: Connection lost\n";
 	exit(3);
 }
 
@@ -39,33 +39,33 @@ $servicetag = $servicetag[1];
 
 if (isset($display['NumberErrsVisible'])) {
 	if ($display['NumberErrsVisible'] > 0) {
-		$status = 1;
-		$out .= trim($display['CurrentDisplay']);
+		$echo .= " " . trim($display['CurrentDisplay']);
+		$exit = 1;
 	}
 } elseif ($display['Configuration'] == "User Defined") {
 	if ($display['CurrentDisplay'] != $display['UserDefinedString']) {
-		$status = 1;
-		$out .= trim($display['CurrentDisplay']);
+		$echo .= " " . trim($display['CurrentDisplay']);
+		$exit = 1;
 	}
 } elseif ($display['Configuration'] == "Service Tag") {
 	if ($display['CurrentDisplay'] != $servicetag) {
-		$status = 1;
-		$out .= trim($display['CurrentDisplay']);
+		$echo .= " " . trim($display['CurrentDisplay']);
+		$exit = 1;
 	}
 } elseif (preg_match("/[A-Z]{3,4}[0-9]{4} /", $display['CurrentDisplay'])) {
-	$status = 1;
-	$out .= trim($display['CurrentDisplay']);
+	$echo .= " " . trim($display['CurrentDisplay']);
+	$exit = 1;
 }
 
 $data .= trim(shell_exec($cli . "getsysinfo -d -c -w -t"));
 if (strpos($data, "Unable to connect") !== FALSE) {
-	echo "UNKNOWN: Connection lost";
+	echo "UNKNOWN: Connection lost\n";
 	exit(3);
 }
 
 $data = preg_replace("/RAC Date\/Time[^\n]*\s*/", "", $data);
 $data = preg_replace("/ " . $servicetag . "/", " <a href='https://www.dell.com/support/home/product-support/servicetag/" . $servicetag . "/overview'>" . $servicetag . "</a>", $data);
-$out .= str_replace("\n", "<br/>", $data);
+$echo .= str_replace("\n", "<br/>", "\n" . ltrim($data, "\n"));
 
 preg_match("/System Model.*?PowerEdge ([^\n]*)\n/", $data, $model);
 $model = $model[1];
@@ -85,14 +85,15 @@ $images = array(
 );
 if (array_key_exists($model, $images)) {
 	if (file_exists("/usr/share/icingaweb2/public/img/PowerEdge/" . $model . ".png")) $images[$model] = "img/PowerEdge/" . $model . ".png";
-	$out .= "<br/><br/><div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>";
+	$echo .= "<br/><br/><div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>";
 }
+$echo .= "\n";
 
-if ($status == 2) {
-	echo "CRITICAL: " . $out;
-} elseif ($status == 1) {
-	echo "WARNING: " . $out;
+if ($exit == 2) {
+	echo "CRITICAL:" . $echo;
+} elseif ($exit == 1) {
+	echo "WARNING:" . $echo;
 } else {
-	echo "OK: " . $out;
+	echo "OK:" . $echo;
 }
-exit($status);
+exit($exit);

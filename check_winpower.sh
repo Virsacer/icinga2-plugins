@@ -1,17 +1,17 @@
 #!/bin/bash
 
-WARNING_PERCENT="98"
-CRITICAL_PERCENT="50"
+WARN="98"
+CRIT="50"
 HOST="127.0.0.1"
 SNMP=""
 
 while getopts "w:c:h:s:" OPT; do
 	case "${OPT}" in
 		w)
-			WARNING_PERCENT=${OPTARG}
+			WARN=${OPTARG}
 			;;
 		c)
-			CRITICAL_PERCENT=${OPTARG}
+			CRIT=${OPTARG}
 			;;
 		h)
 			HOST=${OPTARG}
@@ -20,7 +20,7 @@ while getopts "w:c:h:s:" OPT; do
 			SNMP=${OPTARG}
 			;;
 		*)
-			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ] [ -h HOST ] [ -s SNMP ]" 1>&2
+			echo "USAGE: $0 [ -w Warning ] [ -c Critical ] [ -h Host ] [ -s SNMP ]" 1>&2
 			exit 3
 			;;
 	esac
@@ -49,7 +49,7 @@ if [ "${SNMP}" != "" ];then
 else
 	DATA=`curl -s -k https://${HOST}:8888/0/json`
 	if [ $? -ne 0 ];then
-		echo "UNKNOWN - No data"
+		echo "UNKNOWN: No data"
 		exit 3
 	fi
 
@@ -66,23 +66,23 @@ else
 	fi
 fi
 
-OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT} Time=${MINUTES}m"
+ECHO="${STATUS} - ${BATTERY}% - ${TIMELEFT}|Battery=${BATTERY}%;${WARN};${CRIT} Time=${MINUTES}m"
 
-if [ "${STATUS}" != "Normal" -o ${BATTERY} -lt ${CRITICAL_PERCENT} ];then
+if [ "${STATUS}" != "Normal" -o ${BATTERY} -lt ${CRIT} ];then
 	if [ "${STATUS}" == "CAL" ];then
-		echo "WARNING - ${OUTPUT}"
+		echo "WARNING: ${ECHO}"
 		exit 1
 	else
-		echo "CRITICAL - ${OUTPUT}"
+		echo "CRITICAL: ${ECHO}"
 		exit 2
 	fi
-elif [ ${BATTERY} -lt ${WARNING_PERCENT} ];then
-	echo "WARNING - ${OUTPUT}"
+elif [ ${BATTERY} -lt ${WARN} ];then
+	echo "WARNING: ${ECHO}"
 	exit 1
-elif [ ${BATTERY} -ge ${WARNING_PERCENT} -a ${BATTERY} -le 100 ];then
-	echo "OK - ${OUTPUT}"
+elif [ ${BATTERY} -ge ${WARN} -a ${BATTERY} -le 100 ];then
+	echo "OK: ${ECHO}"
 	exit 0
 fi
 
-echo "UNKNOWN - ${OUTPUT}"
+echo "UNKNOWN: ${ECHO}"
 exit 3

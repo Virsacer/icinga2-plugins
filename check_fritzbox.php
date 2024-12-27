@@ -32,7 +32,7 @@ if (!isset($data) || $data == "" || strpos($data, "\"sid\":\"0000000000000000\""
 	$xml = simplexml_load_file("https://" . $argv[0] . "/login_sid.lua");
 	$xml = simplexml_load_file("https://" . $argv[0] . "/login_sid.lua?sid=" . $xml->SID . "&username=" . $argv[1] . "&response=" . $xml->Challenge . "-" . md5(mb_convert_encoding($xml->Challenge . "-" . $argv[2], "UCS-2LE", "UTF-8")));
 	if ($xml->SID == "0000000000000000") {
-		echo "UNKNOWN - Login failed";
+		echo "UNKNOWN: Login failed\n";
 		exit(3);
 	}
 	$session[$argv[0]] = strval($xml->SID);
@@ -55,40 +55,40 @@ if (isset($argv[5])) {
 switch ($argv[3]) {
 	case "CPU":
 		if (!isset($data['data']['cpuutil']['series'][0])) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data = end($data['data']['cpuutil']['series'][0]);
-		$out = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit;
+		$echo = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit . "\n";
 		break;
 	case "RAM":
 		if (!isset($data['data']['ramusage']['series'][2])) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data = 100 - end($data['data']['ramusage']['series'][2]);
-		$out = $data . "%|used=" . $data . "%;" . $warn . ";" . $crit;
+		$echo = $data . "%|used=" . $data . "%;" . $warn . ";" . $crit . "\n";
 		break;
 	case "TEMP":
 		if (!isset($data['data']['cputemp']['series'][0])) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data = end($data['data']['cputemp']['series'][0]);
-		$out = $data . "°C|Temp=" . $data . ";" . $warn . ";" . $crit;
+		$echo = $data . "°C|Temp=" . $data . ";" . $warn . ";" . $crit . "\n";
 		break;
 	default:
-		echo "UKNOWN - Mode parameter needs to be 'CPU', 'RAM' or 'TEMP'";
+		echo "UNKNOWN: Mode parameter needs to be 'CPU', 'RAM' or 'TEMP'\n";
 		exit(3);
 }
 
 if ($data >= $crit) {
-	echo "CRITICAL - " . $out;
+	echo "CRITICAL: " . $echo;
 	exit(2);
 } elseif ($data >= $warn) {
-	echo "WARNING - " . $out;
+	echo "WARNING: " . $echo;
 	exit(1);
 } else {
-	echo "OK - " . $out;
+	echo "OK: " . $echo;
 	exit(0);
 }

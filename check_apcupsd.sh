@@ -1,18 +1,18 @@
 #!/bin/bash
 
-WARNING_PERCENT="98"
-CRITICAL_PERCENT="50"
+WARN="98"
+CRIT="50"
 
 while getopts "w:c:" OPT; do
 	case "${OPT}" in
 		w)
-			WARNING_PERCENT=${OPTARG}
+			WARN=${OPTARG}
 			;;
 		c)
-			CRITICAL_PERCENT=${OPTARG}
+			CRIT=${OPTARG}
 			;;
 		*)
-			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ]" 1>&2
+			echo "USAGE: $0 [ -w Warning ] [ -c Critical ]" 1>&2
 			exit 3
 			;;
 	esac
@@ -27,23 +27,23 @@ STATUS=`echo "${DATA}" | grep STATUS | sed 's/.*:  *\([A-Z][ A-Z]*[A-Z]\).*/\1/'
 BATTERY=`echo "${DATA}" | grep BCHARGE | sed 's/.*:  *\([0-9][0-9]*\).*/\1/'`
 TIMELEFT=`echo "${DATA}" | grep TIMELEFT | sed 's/.*:  *\([0-9][0-9.]*\).*/\1/'`
 
-OUTPUT="${STATUS} - ${BATTERY}% - ${TIMELEFT}m|Battery=${BATTERY}%;${WARNING_PERCENT};${CRITICAL_PERCENT} Time=${TIMELEFT}m"
+ECHO="${STATUS} - ${BATTERY}% - ${TIMELEFT}m|Battery=${BATTERY}%;${WARN};${CRIT} Time=${TIMELEFT}m"
 
-if [ "${STATUS}" != "ONLINE" -o ${BATTERY} -lt ${CRITICAL_PERCENT} ];then
+if [ "${STATUS}" != "ONLINE" -o ${BATTERY} -lt ${CRIT} ];then
 	if [ "${STATUS}" == "CAL" ];then
-		echo "WARNING - ${OUTPUT}"
+		echo "WARNING: ${ECHO}"
 		exit 1
 	else
-		echo "CRITICAL - ${OUTPUT}"
+		echo "CRITICAL: ${ECHO}"
 		exit 2
 	fi
-elif [ ${BATTERY} -lt ${WARNING_PERCENT} ];then
-	echo "WARNING - ${OUTPUT}"
+elif [ ${BATTERY} -lt ${WARN} ];then
+	echo "WARNING: ${ECHO}"
 	exit 1
-elif [ ${BATTERY} -ge ${WARNING_PERCENT} -a ${BATTERY} -le 100 ];then
-	echo "OK - ${OUTPUT}"
+elif [ ${BATTERY} -ge ${WARN} -a ${BATTERY} -le 100 ];then
+	echo "OK: ${ECHO}"
 	exit 0
 fi
 
-echo "UNKNOWN - ${OUTPUT}"
+echo "UNKNOWN: ${ECHO}"
 exit 3

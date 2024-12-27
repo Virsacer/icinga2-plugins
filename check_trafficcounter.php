@@ -5,7 +5,7 @@ $filename = basename(__FILE__);
 if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
 if (substr(@$argv[0], -strlen($filename)) == $filename) array_shift($argv);
 if (count($argv) < 4) {
-	echo "USAGE: " . $filename . " Host Community In Out\n";
+	echo "USAGE: " . $filename . " Host SNMP InOID OutOID\n";
 	exit(3);
 }
 
@@ -13,7 +13,7 @@ $time = time();
 $snmp = new SNMP(SNMP::VERSION_2C, $argv[0], $argv[1]);
 $snmp = @$snmp->get(array($argv[2], $argv[3]), TRUE);
 if (!$snmp || count($snmp) != 2) {
-	echo "UNKNOWN - No data";
+	echo "UNKNOWN: No data\n";
 	exit(3);
 }
 
@@ -51,5 +51,5 @@ file_put_contents($cache, json_encode($data));
 echo "IN: " . number_format($data['count_in'] / 1000 / 1000 / 1000, 2) . "GB ";
 echo "OUT: " . number_format($data['count_out'] / 1000 / 1000 / 1000, 2) . "GB ";
 echo "TOTAL: " . number_format(($data['count_in'] + $data['count_out']) / 1000 / 1000 / 1000, 2) . "GB|";
-echo "in=" . $data['count_in'] . "B out=" . $data['count_out'] . "B total=" . ($data['count_in'] + $data['count_out']) . "B ";
+echo "in=" . $data['count_in'] . "B out=" . $data['count_out'] . "B total=" . ($data['count_in'] + $data['count_out']) . "B\n";
 exit(0);

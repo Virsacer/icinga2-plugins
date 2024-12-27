@@ -30,11 +30,11 @@ preg_match("/^([^:]+)(:([0-9]+))?$/", $argv[0], $data);
 if (!$data) preg_match("/^\[([^\]]+)\](:([0-9]+))$/", $argv[0], $data);
 $ssh = ssh2_connect($data[1] ?? $argv[0], $data[3] ?? 22);
 if (!$ssh) {
-	echo "UNKNOWN - Connection failed";
+	echo "UNKNOWN: Connection failed\n";
 	exit(3);
 }
 if (!ssh2_auth_password($ssh, $argv[1], $argv[2])) {
-	echo "UNKNOWN - Login failed";
+	echo "UNKNOWN: Login failed\n";
 	exit(3);
 }
 
@@ -44,10 +44,10 @@ switch ($argv[3]) {
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
 		if (!is_numeric($data)) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
-		$out = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit;
+		$echo = $data . "%|load=" . $data . "%;" . $warn . ";" . $crit . "\n";
 		break;
 	case "HDD":
 	case "RAM":
@@ -57,7 +57,7 @@ switch ($argv[3]) {
 		$data = trim(stream_get_contents($stream));
 		$data = explode("+", $data);
 		if (count($data) != 2) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data = array_combine(array("free", "total"), $data);
@@ -70,7 +70,7 @@ switch ($argv[3]) {
 		$data['used2'] = number_format($data['used'] / 1024 ** $exponent, $exponent ? 1 : 0, ".", "") . " " . $symbols[$exponent];
 		$exponent = intval(log($data['total']) / log(1024));
 		$data['total2'] = number_format($data['total'] / 1024 ** $exponent, $exponent ? 1 : 0, ".", "") . " " . $symbols[$exponent];
-		$out = $data['percent'] . "% " . $data['used2'] . "/" . $data['total2'] . "|used=" . $data['used'] . "B;" . $data['warn'] . ";" . $data['crit'] . ";0;" . $data['total'];
+		$echo = $data['percent'] . "% " . $data['used2'] . "/" . $data['total2'] . "|used=" . $data['used'] . "B;" . $data['warn'] . ";" . $data['crit'] . ";0;" . $data['total'] . "\n";
 		$data = $data['percent'];
 		break;
 	case "NTP":
@@ -78,11 +78,11 @@ switch ($argv[3]) {
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
 		if (!is_numeric($data)) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data /= 1000000;
-		$out = "Offset " . $data . " secs|offset=" . $data . "s;" . -$warn . ":" . $warn . ";" . -$crit . ":" . $crit;
+		$echo = "Offset " . $data . " secs|offset=" . $data . "s;" . -$warn . ":" . $warn . ";" . -$crit . ":" . $crit . "\n";
 		$data = abs($data);
 		break;
 	case "TEMP":
@@ -91,31 +91,31 @@ switch ($argv[3]) {
 		$data = trim(stream_get_contents($stream));
 		preg_match_all("/ ([a-z]+-temperature[0-9]*) *([0-9]+)/", $data, $data);
 		if (!count($data[1]) || !count($data[2])) {
-			echo "UNKNOWN - No data";
+			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
 		$data = array_combine($data[1], $data[2]);
-		$out = $data['cpu-temperature'] . "°C|";
+		$echo = $data['cpu-temperature'] . "°C|";
 		ksort($data);
 		foreach ($data as $key => $val) {
-			$out .= " " . $key . "=" . $val;
-			if ($key == "cpu-temperature") $out .= ";" . $warn . ";" . $crit;
+			$echo .= " " . $key . "=" . $val;
+			if ($key == "cpu-temperature") $echo .= ";" . $warn . ";" . $crit;
 		}
-		$out = str_replace("| ", "|", $out);
+		$echo = str_replace("| ", "|", $echo . "\n");
 		$data = $data['cpu-temperature'];
 		break;
 	default:
-		echo "UKNOWN - Mode parameter needs to be 'CPU', 'HDD', 'NTP', 'RAM' or 'TEMP'";
+		echo "UKNOWN: Mode parameter needs to be 'CPU', 'HDD', 'NTP', 'RAM' or 'TEMP'\n";
 		exit(3);
 }
 
 if ($data >= $crit) {
-	echo "CRITICAL - " . $out;
+	echo "CRITICAL: " . $echo;
 	exit(2);
 } elseif ($data >= $warn) {
-	echo "WARNING - " . $out;
+	echo "WARNING: " . $echo;
 	exit(1);
 } else {
-	echo "OK - " . $out;
+	echo "OK: " . $echo;
 	exit(0);
 }

@@ -1,18 +1,18 @@
 #!/bin/bash
 
-WARNING_PERCENT="70"
-CRITICAL_PERCENT="85"
+WARN="70"
+CRIT="85"
 
 while getopts "w:c:" OPT; do
 	case "${OPT}" in
 		w)
-			WARNING_PERCENT=${OPTARG}
+			WARN=${OPTARG}
 			;;
 		c)
-			CRITICAL_PERCENT=${OPTARG}
+			CRIT=${OPTARG}
 			;;
 		*)
-			echo "Usage: $0 [ -w WARNING ] [ -c CRITICAL ]" 1>&2
+			echo "USAGE: $0 [ -w Warning ] [ -c Critical ]" 1>&2
 			exit 3
 			;;
 	esac
@@ -23,47 +23,47 @@ if [ $? -ne 0 ];then
 	exit 3
 fi
 
-STATUS=0
-OUTPUT=""
-PERFORMANCE="|"
+EXIT=0
+ECHO=""
+PERF="|"
 
 while read -r POOL; do
 	STATE=""
 	POOL=(${POOL})
-	OUTPUT="${OUTPUT}\n"
-	if [ "${POOL[1]}" != "ONLINE" -o ${POOL[2]} -ge ${CRITICAL_PERCENT} ];then
+	ECHO="${ECHO}\n"
+	if [ "${POOL[1]}" != "ONLINE" -o ${POOL[2]} -ge ${CRIT} ];then
 		if [ "${POOL[1]}" != "ONLINE" ];then
 			STATE="\n`zpool status ${POOL[0]} | sed -e '/^$/d' -e '/action:/d' -e '/config:/d' -e '/pool:/d' -e '/see:/d' -e '/state:/d' -e '/status:/,/\.$/d' -e 's/ \+was \/dev.*//'`\n"
 		fi
 		echo ${STATE} | grep "resilver in progress" > /dev/null
-		if [ $? -ne 0 -o ${POOL[2]} -ge ${CRITICAL_PERCENT} ];then
-			STATUS=2
-			OUTPUT="${OUTPUT}[CRITICAL] "
+		if [ $? -ne 0 -o ${POOL[2]} -ge ${CRIT} ];then
+			ECHO="${ECHO}[CRITICAL] "
+			EXIT=2
 		else
-			if [ ${STATUS} -eq 0 ];then
-				STATUS=1
+			ECHO="${ECHO}[WARNING] "
+			if [ ${EXIT} -eq 0 ];then
+				EXIT=1
 			fi
-			OUTPUT="${OUTPUT}[WARNING] "
 		fi
 	else
-		if [ ${POOL[2]} -ge ${WARNING_PERCENT} ];then
-			if [ ${STATUS} -eq 0 ];then
-				STATUS=1
+		if [ ${POOL[2]} -ge ${WARN} ];then
+			ECHO="${ECHO}[WARNING] "
+			if [ ${EXIT} -eq 0 ];then
+				EXIT=1
 			fi
-			OUTPUT="${OUTPUT}[WARNING] "
 		else
-			OUTPUT="${OUTPUT}[OK] "
+			ECHO="${ECHO}[OK] "
 		fi
 	fi
-	OUTPUT="${OUTPUT}${POOL[0]} ${POOL[1]} ${POOL[2]}%${STATE}"
-	PERFORMANCE="${PERFORMANCE} '${POOL[0]}'=${POOL[3]}B;$((${POOL[4]}*${WARNING_PERCENT}/100));$((${POOL[4]}*${CRITICAL_PERCENT}/100));0;${POOL[4]}"
+	ECHO="${ECHO}${POOL[0]} ${POOL[1]} ${POOL[2]}%${STATE}"
+	PERF="${PERF} '${POOL[0]}'=${POOL[3]}B;$((${POOL[4]}*${WARN}/100));$((${POOL[4]}*${CRIT}/100));0;${POOL[4]}"
 done <<< "$DATA"
 
-case ${STATUS} in
-	2) echo -en "CRITICAL${OUTPUT}";;
-	1) echo -en "WARNING${OUTPUT}";;
-	0) echo -en "OK${OUTPUT}";;
+case ${EXIT} in
+	2) echo -en "CRITICAL:${ECHO}";;
+	1) echo -en "WARNING:${ECHO}";;
+	0) echo -en "OK:${ECHO}";;
 esac
 
-echo ${PERFORMANCE} | sed -e 's/| /|/'
-exit ${STATUS}
+echo ${PERF} | sed -e 's/| /|/'
+exit ${EXIT}

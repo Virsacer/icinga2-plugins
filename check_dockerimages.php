@@ -10,12 +10,12 @@ if (array_key_exists("h", $options)) {
 
 $containers = trim(shell_exec("docker ps -a --format '{{.Image}} {{.Names}}'"));
 if (!$containers) {
-	echo "UNKNOWN - No data";
+	echo "UNKNOWN: No data\n";
 	exit(3);
 }
 
-$out = array();
-$status = 0;
+$exit = 0;
+$echo = array();
 $time = time();
 $containers = explode("\n", $containers);
 
@@ -42,8 +42,8 @@ foreach ($containers as $container) {
 	}
 
 	if (!$manifest || strpos($manifest, "error") !== FALSE || strpos($manifest, "toomanyrequests") !== FALSE) {
-		if ($status == 0) $status = 1;
-		$out["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No manifest for '" . $container[0] . "'";
+		$echo["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No manifest for '" . $container[0] . "'";
+		if ($exit == 0) $exit = 1;
 		continue;
 	}
 
@@ -52,22 +52,22 @@ foreach ($containers as $container) {
 	if (!isset($container[1])) $container[1] = $container[0];
 
 	if (strpos($manifest, $image) === FALSE) {
-		$status = 2;
-		$out["1-" . $container[0]] = "[CRITICAL] " . $container[1] . ": '" . $container[0] . "' does not match manifest";
+		$echo["1-" . $container[0]] = "[CRITICAL] " . $container[1] . ": '" . $container[0] . "' does not match manifest";
+		$exit = 2;
 		continue;
 	}
 
-	if (isset($options['ok'])) $out["3-" . $container[0]] = "[OK] " . $container[1] . ": '" . $container[0] . "' matches manifest";
+	if (isset($options['ok'])) $echo["3-" . $container[0]] = "[OK] " . $container[1] . ": '" . $container[0] . "' matches manifest";
 }
 
-ksort($out);
-$out = "\n" . implode("\n", $out);
+ksort($echo);
+$echo = "\n" . implode("\n", $echo) . "\n";
 
-if ($status == 2) {
-	echo "CRITICAL" . $out;
-} elseif ($status == 1) {
-	echo "WARNING" . $out;
+if ($exit == 2) {
+	echo "CRITICAL:" . $echo;
+} elseif ($exit == 1) {
+	echo "WARNING:" . $echo;
 } else {
-	echo "OK" . $out;
+	echo "OK:" . $echo;
 }
-exit($status);
+exit($exit);
