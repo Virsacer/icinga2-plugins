@@ -42,12 +42,12 @@ if (isset($display['NumberErrsVisible'])) {
 		$echo .= " " . trim($display['CurrentDisplay']);
 		$exit = 1;
 	}
-} elseif ($display['Configuration'] == "User Defined") {
+} elseif (trim($display['Configuration']) == "User Defined") {
 	if ($display['CurrentDisplay'] != $display['UserDefinedString']) {
 		$echo .= " " . trim($display['CurrentDisplay']);
 		$exit = 1;
 	}
-} elseif ($display['Configuration'] == "Service Tag") {
+} elseif (trim($display['Configuration']) == "Service Tag") {
 	if ($display['CurrentDisplay'] != $servicetag) {
 		$echo .= " " . trim($display['CurrentDisplay']);
 		$exit = 1;
@@ -83,10 +83,8 @@ $images = array(
 	"R7515" => "https://i.dell.com/is/image/DellContent/content/dam/global-site-design/product_images/dell_enterprise_products/enterprise_systems/poweredge/c6525/global_spi/ng/enterprise-server-poweredge-r7515-lf-bestof-500-ng.psd?fmt=png-alpha",
 	"R7525" => "https://i.dell.com/is/image/DellContent/content/dam/global-site-design/product_images/dell_enterprise_products/enterprise_systems/poweredge/poweredge_r7525/global_spi/ng/enterprise-servers-poweredge-r7525-lf-bestof-500-ng.psd?fmt=png-alpha",
 );
-if (array_key_exists($model, $images)) {
-	if (file_exists("/usr/share/icingaweb2/public/img/PowerEdge/" . $model . ".png")) $images[$model] = "img/PowerEdge/" . $model . ".png";
-	$echo .= "<br/><br/><div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>";
-}
+if (file_exists("/usr/share/icingaweb2/public/img/PowerEdge/" . $model . ".png")) $images[$model] = "img/PowerEdge/" . $model . ".png";
+if (array_key_exists($model, $images)) $echo .= "<br/><br/><div class='markdown'><img src='" . $images[$model] . "' alt='" . $model . "'/></div>";
 $echo .= "\n";
 
 if ($exit == 2) {

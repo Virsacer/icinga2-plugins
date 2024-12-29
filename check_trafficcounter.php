@@ -11,6 +11,7 @@ if (count($argv) < 4) {
 
 $time = time();
 $snmp = new SNMP(SNMP::VERSION_2C, $argv[0], $argv[1]);
+$snmp->valueretrieval = SNMP_VALUE_PLAIN;
 $snmp = @$snmp->get(array($argv[2], $argv[3]), TRUE);
 if (!$snmp || count($snmp) != 2) {
 	echo "UNKNOWN: No data\n";
@@ -23,9 +24,6 @@ if (file_exists($cache)) {
 } else {
 	$data = array("time" => 0);
 }
-
-$snmp[$argv[2]] = preg_replace("/.*: /", "", $snmp[$argv[2]]);
-$snmp[$argv[3]] = preg_replace("/.*: /", "", $snmp[$argv[3]]);
 
 if (date("Ym", $data['time']) != date("Ym", $time)) {
 	$stats = "Last values before reset: " . date("Y-m-d H:i:s", $data['time']) . "\t"
