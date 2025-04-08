@@ -36,12 +36,14 @@ foreach ($containers as $container) {
 	$cache = __DIR__ . "/cache/" . $filename . "-" . str_replace("/", "-", $container[0]);
 	if (!file_exists($cache) || $time - filemtime($cache) > 3 * 3600) {
 		$manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
+		if (strpos($manifest, "handshake timeout") !== FALSE) $manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
+		if (strpos($manifest, "handshake timeout") !== FALSE) $manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
 		if ($manifest) file_put_contents($cache, $manifest);
 	} else {
 		$manifest = file_get_contents($cache);
 	}
 
-	if (!$manifest || strpos($manifest, "error") !== FALSE || strpos($manifest, "toomanyrequests") !== FALSE) {
+	if (!$manifest || strpos($manifest, "error") !== FALSE || strpos($manifest, "toomanyrequests") !== FALSE || strpos($manifest, "handshake timeout") !== FALSE) {
 		$echo["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No manifest for '" . $container[0] . "'";
 		if ($exit == 0) $exit = 1;
 		continue;
