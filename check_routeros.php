@@ -2,8 +2,8 @@
 <?php
 
 $filename = basename(__FILE__);
-if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
-if (substr(@$argv[0], -strlen($filename)) == $filename) array_shift($argv);
+if (substr($argv[1] ?? "", -strlen($filename)) == $filename) array_shift($argv);
+if (substr($argv[0] ?? "", -strlen($filename)) == $filename) array_shift($argv);
 if (count($argv) < 4) {
 	echo "USAGE: " . $filename . " RouterOS[:Port] Username Password (CPU|HDD|NTP|RAM|TEMP) [Warning Critical]\n";
 	exit(3);

@@ -2,8 +2,8 @@
 <?php
 
 $filename = basename(__FILE__);
-if (substr(@$argv[1], -strlen($filename)) == $filename) array_shift($argv);
-if (substr(@$argv[0], -strlen($filename)) == $filename) array_shift($argv);
+if (substr($argv[1] ?? "", -strlen($filename)) == $filename) array_shift($argv);
+if (substr($argv[0] ?? "", -strlen($filename)) == $filename) array_shift($argv);
 if (count($argv) < 4) {
 	echo "USAGE: " . $filename . " Host SNMP InOID OutOID\n";
 	exit(3);
