@@ -32,9 +32,9 @@ while getopts "w:c:d:i:" OPT; do
 	esac
 done
 
-DATA=`timeout 10 df -PT ${DISK} 2> /dev/null`
+DATA=`LANG=en_US timeout 10 df -PT ${DISK} 2> /dev/null`
 if [ $? -ne 0 ];then
-	`timeout -v 10 df ${DISK}`
+	`LANG=en_US timeout -v 10 df ${DISK}`
 	exit 3
 fi
 if [ "${DISK}" != "-l" ];then

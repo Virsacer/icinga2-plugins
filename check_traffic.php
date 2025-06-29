@@ -35,7 +35,7 @@ $snmp = $data;
 
 $interfaces = $snmp['name'];
 foreach ($snmp['alias'] as $key => $alias) {
-	if ($alias && $alias != "defconf") $interfaces[$key] = $alias;
+	if ($alias && strpos($alias, "defconf") === FALSE) $interfaces[$key] = $alias;
 }
 if (isset($argv[2])) $interfaces = preg_grep("/^" . trim($argv[2], "^$") . "$/i", $interfaces);
 if (!count($interfaces)) {
@@ -76,7 +76,7 @@ if (file_exists($cache) && $time - filemtime($cache) <= 86400) {
 					$perf .= " 'usage_in'=" . round($in / $speed * 100) . "%;" . $warn . ";" . $crit . " 'usage_out'=" . round($out / $speed * 100) . "%;" . $warn . ";" . $crit;
 					if ($exit != 2 && ($in >= $speed * $crit / 100 || $out >= $speed * $crit / 100)) $exit = 2;
 					if ($exit == 0 && ($in >= $speed * $warn / 100 || $out >= $speed * $warn / 100)) $exit = 1;
-					$speed = ";" . $speed * $warn /100 . ";" . $speed * $crit /100 . ";0;" . $speed;
+					$speed = ";" . $speed * $warn / 100 . ";" . $speed * $crit / 100 . ";0;" . $speed;
 				} else $speed = ";;;0;" . $speed;
 			}
 			$perf .= " '" . ($interface ? $interface . "_" : "") . "traffic_in'=" . $in . $speed . " '" . ($interface ? $interface . "_" : "") . "traffic_out'=" . $out . $speed;

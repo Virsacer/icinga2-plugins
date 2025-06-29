@@ -40,6 +40,7 @@ if (!ssh2_auth_password($ssh, $argv[1], $argv[2])) {
 
 switch ($argv[3]) {
 	case "CPU":
+		sleep(3);
 		$stream = ssh2_exec($ssh, ":put [/system/resource/get cpu-load]");
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
