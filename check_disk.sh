@@ -57,6 +57,9 @@ while read -r FS; do
 	if [ ${FS[1]} == "zfs" ];then
 		[ -x "$(which zfs)" ] || FS[1]="ZFS"
 	fi
+	if [ "${DISK}" != "-l" ];then
+		[ ${FS[1]} != "tmpfs" ] || FS[1]="TMPFS"
+	fi
 	case ${FS[1]} in
 		Type|devtmpfs|overlay|tmpfs)
 			continue
