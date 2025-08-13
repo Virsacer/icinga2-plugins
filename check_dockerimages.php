@@ -49,7 +49,12 @@ foreach ($containers as $container) {
 		continue;
 	}
 
-	$image = shell_exec("docker inspect '" . ($container[1] ?? $container[0]) . "'|grep '\"" . (isset($container[1]) ? "Image" : "Id") . "\": \"sha256:'");
+	$image = shell_exec("docker inspect '" . ($container[1] ?? $container[0]) . "' 2>&1 | grep '\"" . (isset($container[1]) ? "Image" : "Id") . "\": \"sha256:'");
+	if (!$image) {
+		$echo["2-" . $container[0]] = "[WARNING] " . ($container[1] ?? $container[0]) . ": No image for '" . $container[0] . "'";
+		if ($exit == 0) $exit = 1;
+		continue;
+	}
 	$image = preg_replace("/.*sha256:([0-9a-f]+).*/s", "$1", $image);
 	if (!isset($container[1])) $container[1] = $container[0];
 
