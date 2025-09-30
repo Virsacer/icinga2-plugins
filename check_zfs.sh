@@ -22,6 +22,10 @@ DATA=`zpool list -Hpo name,health,cap,alloc,size`
 if [ $? -ne 0 ];then
 	exit 3
 fi
+if [ "${DATA}" == "" ];then
+	echo "UNKNOWN: No data"
+	exit 3
+fi
 
 EXIT=0
 ECHO=""
@@ -33,7 +37,7 @@ while read -r POOL; do
 	ECHO="${ECHO}\n"
 	if [ "${POOL[1]}" != "ONLINE" -o ${POOL[2]} -ge ${CRIT} ];then
 		if [ "${POOL[1]}" != "ONLINE" ];then
-			STATE="\n`zpool status ${POOL[0]} | sed -e '/^$/d' -e '/action:/d' -e '/config:/d' -e '/pool:/d' -e '/see:/d' -e '/state:/d' -e '/status:/,/\.$/d' -e 's/ \+was \/dev.*//'`\n"
+			STATE="\n`zpool status ${POOL[0]} | sed -e '/^$/d' -e '/config:/d' -e '/pool:/d' -e '/see:/d' -e '/state:/d' `\n"
 		fi
 		echo ${STATE} | grep "resilver in progress" > /dev/null
 		if [ $? -ne 0 -o ${POOL[2]} -ge ${CRIT} ];then
