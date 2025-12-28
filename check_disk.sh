@@ -83,13 +83,13 @@ while read -r FS; do
 		WARN=${WARN_LARGE}
 		CRIT=${CRIT_LARGE}
 	fi
-	if [ ${USED} -ge $(((${AVAI}+${USED})*${CRIT}/100 | bc -l)) ];then
+	if [ ${USED} -ge `awk "BEGIN {printf \"%.0f\",(${AVAI}+${USED})*${CRIT}/100}"` ];then
 		if [ "${DISK}" == "-l" ];then
 			ECHO="${ECHO}\n[CRITICAL] "
 		fi
 		EXIT=2
 	else
-		if [ ${USED} -ge $(((${AVAI}+${USED})*${WARN}/100 | bc -l)) ];then
+		if [ ${USED} -ge `awk "BEGIN {printf \"%.0f\",(${AVAI}+${USED})*${WARN}/100}"` ];then
 			if [ "${DISK}" == "-l" ];then
 				ECHO="${ECHO}\n[WARNING] "
 			fi
@@ -102,8 +102,8 @@ while read -r FS; do
 			fi
 		fi
 	fi
-	ECHO="${ECHO}${FS[6]} (${FS[1]}) ${PERCENT}% "`echo "scale=3;${USED}/1024/1024/1024" | bc -l`"GB/"`echo "scale=3;${SIZE}/1024/1024/1024" | bc -l`"GB"
-	PERF="${PERF} ${FS[6]}=${USED}B;$(((${AVAI}+${USED})*${WARN}/100 | bc -l));$(((${AVAI}+${USED})*${CRIT}/100 | bc -l));0;${SIZE}"
+	ECHO="${ECHO}${FS[6]} (${FS[1]}) ${PERCENT}% "`awk "BEGIN {printf \"%.3f\",${USED}/1024/1024/1024}"`"GB/"`awk "BEGIN {printf \"%.3f\",${SIZE}/1024/1024/1024}"`"GB"
+	PERF="${PERF} ${FS[6]}=${USED}B;"`awk "BEGIN {printf \"%.0f\",(${AVAI}+${USED})*${WARN}/100}"`";"`awk "BEGIN {printf \"%.0f\",(${AVAI}+${USED})*${CRIT}/100}"`";0;${SIZE}"
 	if [ "${DISK}" != "-l" ];then
 		ECHO=" ${ECHO}"
 		PERF="${PERF} percent=${PERCENT}%;${WARN};${CRIT} allocation=${SIZE}B"
