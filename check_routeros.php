@@ -10,8 +10,8 @@ if (count($argv) < 4) {
 }
 
 if (isset($argv[5])) {
-	$warn = min(intval($argv[4]), intval($argv[5]));
-	$crit = max(intval($argv[4]), intval($argv[5]));
+	$warn = min(floatval($argv[4]), floatval($argv[5]));
+	$crit = max(floatval($argv[4]), floatval($argv[5]));
 } elseif ($argv[3] == "HDD") {
 	$warn = 95;
 	$crit = 98;

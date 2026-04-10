@@ -34,10 +34,11 @@ foreach ($containers as $container) {
 	$container = explode(" ", $container);
 
 	$cache = __DIR__ . "/cache/" . $filename . "-" . str_replace("/", "-", $container[0]);
-	if (!file_exists($cache) || $time - filemtime($cache) > 3 * 3600) {
-		$manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
-		if (strpos($manifest, "handshake timeout") !== FALSE) $manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
-		if (strpos($manifest, "handshake timeout") !== FALSE) $manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
+	if (!file_exists($cache) || $time - filemtime($cache) > 6 * 3600) {
+		for ($i = 3; $i > 0; $i--) {
+			$manifest = shell_exec("docker manifest inspect -v '" . $container[0] . "' 2>&1");
+			if (json_decode($manifest, TRUE)) break;
+		}
 		if ($manifest) file_put_contents($cache, $manifest);
 	} else {
 		$manifest = file_get_contents($cache);

@@ -19,6 +19,7 @@ try {
 	@include("vendor/autoload.php");
 	$config = new WSSC\Components\ClientConfig();
 	$config->setContextOptions(array("ssl" => array("verify_peer" => FALSE, "verify_peer_name" => FALSE)));
+	$config->setTimeout(60);
 	$client = new WSSC\WebSocketClient("wss://" . $argv[0] . "/websocket", $config);
 } catch (Throwable $throwable) {
 	$error = $throwable->getMessage();
