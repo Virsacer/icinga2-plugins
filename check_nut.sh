@@ -34,20 +34,26 @@ TIMELEFT=`echo "${DATA}" | grep battery.runtime: | sed 's/.*:  *\([0-9][0-9.]*\)
 
 MINUTES=$((${TIMELEFT} / 60))
 
+EXIT=0
 ECHO="${STATUS} - ${BATTERY}% - ${MINUTES}m|Battery=${BATTERY}%;${WARN};${CRIT} Time=${MINUTES}m"
 
-STATUS=`echo "${STATUS}" | sed 's/OL CHRG/OL/'`
-
-if [ "${STATUS}" != "OL" -o ${BATTERY} -lt ${CRIT} ];then
-	echo "CRITICAL: ${ECHO}"
-	exit 2
-elif [ ${BATTERY} -lt ${WARN} ];then
-	echo "WARNING: ${ECHO}"
-	exit 1
-elif [ ${BATTERY} -ge ${WARN} -a ${BATTERY} -le 100 ];then
-	echo "OK: ${ECHO}"
-	exit 0
+if [ "${STATUS}" != "OL" -a "${STATUS}" != "OL CHRG" -a "${STATUS}" != "OL TRIM" ];then
+	if [ "${STATUS}" == "CAL" ];then
+		EXIT=1
+	else
+		EXIT=2
+	fi
+fi
+if [ ${BATTERY} -lt ${CRIT} ];then
+	EXIT=2
+elif [ ${BATTERY} -lt ${WARN} -a ${EXIT} -eq 0 ];then
+	EXIT=1
 fi
 
-echo "UNKNOWN: ${ECHO}"
-exit 3
+case ${EXIT} in
+	2) echo -en "CRITICAL: ${ECHO}";;
+	1) echo -en "WARNING: ${ECHO}";;
+	0) echo -en "OK: ${ECHO}";;
+esac
+
+exit ${EXIT}

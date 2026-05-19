@@ -27,23 +27,26 @@ STATUS=`echo "${DATA}" | grep STATUS | sed 's/.*:  *\([A-Z][ A-Z]*[A-Z]\).*/\1/'
 BATTERY=`echo "${DATA}" | grep BCHARGE | sed 's/.*:  *\([0-9][0-9]*\).*/\1/'`
 TIMELEFT=`echo "${DATA}" | grep TIMELEFT | sed 's/.*:  *\([0-9][0-9.]*\).*/\1/'`
 
+EXIT=0
 ECHO="${STATUS} - ${BATTERY}% - ${TIMELEFT}m|Battery=${BATTERY}%;${WARN};${CRIT} Time=${TIMELEFT}m"
 
-if [ "${STATUS}" != "ONLINE" -o ${BATTERY} -lt ${CRIT} ];then
+if [ "${STATUS}" != "ONLINE" -a "${STATUS}" != "TRIM" ];then
 	if [ "${STATUS}" == "CAL" ];then
-		echo "WARNING: ${ECHO}"
-		exit 1
+		EXIT=1
 	else
-		echo "CRITICAL: ${ECHO}"
-		exit 2
+		EXIT=2
 	fi
-elif [ ${BATTERY} -lt ${WARN} ];then
-	echo "WARNING: ${ECHO}"
-	exit 1
-elif [ ${BATTERY} -ge ${WARN} -a ${BATTERY} -le 100 ];then
-	echo "OK: ${ECHO}"
-	exit 0
+fi
+if [ ${BATTERY} -lt ${CRIT} ];then
+	EXIT=2
+elif [ ${BATTERY} -lt ${WARN} -a ${EXIT} -eq 0 ];then
+	EXIT=1
 fi
 
-echo "UNKNOWN: ${ECHO}"
-exit 3
+case ${EXIT} in
+	2) echo -en "CRITICAL: ${ECHO}";;
+	1) echo -en "WARNING: ${ECHO}";;
+	0) echo -en "OK: ${ECHO}";;
+esac
+
+exit ${EXIT}
