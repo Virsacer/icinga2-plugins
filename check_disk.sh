@@ -32,9 +32,8 @@ while getopts "w:c:d:i:" OPT; do
 	esac
 done
 
-DATA=`LANG=en_US timeout 10 df -PT ${DISK} 2> /dev/null`
+DATA=`LANG=en_US timeout -v 10 df -PT ${DISK}`
 if [ $? -ne 0 ];then
-	`LANG=en_US timeout -v 10 df ${DISK}`
 	exit 3
 fi
 if [ "${DISK}" != "-l" ];then
@@ -78,7 +77,7 @@ while read -r FS; do
 			AVAI=$((${FS[4]}*1024))
 			;;
 	esac
-	PERCENT=$((100-${AVAI}*100/${SIZE}))
+	PERCENT=$((100-${AVAI}*100/(${AVAI}+${USED})))
 	if [ ${SIZE} -ge 1099511627776 ];then
 		WARN=${WARN_LARGE}
 		CRIT=${CRIT_LARGE}

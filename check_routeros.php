@@ -90,11 +90,12 @@ switch ($argv[3]) {
 		$stream = ssh2_exec($ssh, "/system/health/print");
 		stream_set_blocking($stream, TRUE);
 		$data = trim(stream_get_contents($stream));
-		preg_match_all("/ ([a-z]+-temperature[0-9]*) *([0-9]+)/", $data, $data);
+		preg_match_all("/ ([a-z-]*temperature[0-9]*) *([0-9]+)/", $data, $data);
 		if (!count($data[1]) || !count($data[2])) {
 			echo "UNKNOWN: No data\n";
 			exit(3);
 		}
+		if ($data[1][0] == "temperature") $data[1][0] = "cpu-temperature";
 		$data = array_combine($data[1], $data[2]);
 		$echo = $data['cpu-temperature'] . "°C|";
 		ksort($data);
